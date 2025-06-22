@@ -1,0 +1,29 @@
+# General
+.DS_Store
+.env
+.env.*
+*.log
+node_modules/
+old/
+
+# Java / Maven
+target/
+.mvn/
+*.jar
+*.war
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

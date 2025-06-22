@@ -1,0 +1,104 @@
+name: Deploy to AWS
+
+# This workflow is triggered on every push to the main branch.
+on:
+  push:
+    branches: [ "main" ]
+
+# Permissions needed for OIDC connection to AWS.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        # This uses OpenID Connect to securely authenticate with AWS.
+        # You will need to set this up in AWS IAM.
+        role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/GitHubAction-ECR-ECS-Role # Placeholder
+        aws-region: us-east-1 # Placeholder: Use your target AWS region
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # --- Build and Push Backend API Image ---
+    - name: Build, tag, and push bookmarked-api image to Amazon ECR
+      id: build-api-image
+      env:
+        # Use the ECR registry URI from the login step.
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        # Set your ECR repository name.
+        ECR_REPOSITORY: bookmarked-api # Placeholder
+        # Use the GitHub SHA for a unique image tag.
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./bookmarked-api
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+    # --- Build and Push ML Service Image ---
+    - name: Build, tag, and push bookmarked-ml-service image to Amazon ECR
+      id: build-ml-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: bookmarked-ml-service # Placeholder
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./bookmarked-ml-service
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+    # --- Deploy Backend API to ECS ---
+    - name: Download ECS task definition for Backend API
+      run: |
+        aws ecs describe-task-definition --task-definition bookmarked-api-task-definition \
+        --query taskDefinition > task-definition-api.json
+        # Placeholder: 'bookmarked-api-task-definition' is the name of your task definition in ECS.
+        
+    - name: Fill in the new image ID in the ECS task definition
+      id: task-def-api
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition-api.json
+        container-name: bookmarked-api-container # Placeholder: The name of the container in your task definition.
+        image: ${{ steps.build-api-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition for Backend API
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def-api.outputs.task-definition }}
+        service: bookmarked-api-service # Placeholder: The name of your ECS service.
+        cluster: bookmarked-cluster # Placeholder: The name of your ECS cluster.
+        wait-for-service-stability: true
+
+    # --- Deploy ML Service to ECS ---
+    - name: Download ECS task definition for ML Service
+      run: |
+        aws ecs describe-task-definition --task-definition bookmarked-ml-task-definition \
+        --query taskDefinition > task-definition-ml.json
+        # Placeholder: 'bookmarked-ml-task-definition' is the name of your task definition in ECS.
+        
+    - name: Fill in the new image ID in the ECS task definition
+      id: task-def-ml
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition-ml.json
+        container-name: bookmarked-ml-container # Placeholder: The name of the container in your task definition.
+        image: ${{ steps.build-ml-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition for ML Service
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def-ml.outputs.task-definition }}
+        service: bookmarked-ml-service # Placeholder: The name of your ECS service.
+        cluster: bookmarked-cluster # Placeholder: The name of your ECS cluster.
+        wait-for-service-stability: true
