@@ -34,7 +34,7 @@ graph TD
         end
         subgraph "Databases"
             E[RDS - PostgreSQL]
-            F[Neo4j (AuraDB)]
+            F[Neo4j - AuraDB]
         end
         G[Cognito]
         H[S3 for Assets]
