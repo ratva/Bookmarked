@@ -27,3 +27,4 @@ env/
 *.ntvs*
 *.njsproj
 *.sln
+create_issues.sh
