@@ -64,7 +64,7 @@ graph TD
 | Layer               | Technology                                       |
 | :------------------ | :----------------------------------------------- |
 | **Frontend** | `React` `TypeScript` `Tailwind CSS`              |
-| **Backend API** | `Java 21` `Spring Boot 3` `Spring Security`      |
+| **Backend API** | `Java 21 (Temurin JDK)` `Spring Boot 3` `Spring Security`      |
 | **ML Service** | `Python 3` `FastAPI` `Scikit-learn` `Pandas`     |
 | **Databases** | `PostgreSQL` (Relational) & `Neo4j` (Graph)      |
 | **Authentication** | `AWS Cognito` `OAuth2`                           |
@@ -98,7 +98,7 @@ To run the entire "Bookmarked" platform on your local machine, follow these step
 
 ### Prerequisites
 
-* Java 21+
+* Java 21+ (Temurin JDK)
 * Maven 3.8+
 * Node.js 18+
 * Docker & Docker Compose
