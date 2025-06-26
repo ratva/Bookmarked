@@ -28,3 +28,4 @@ env/
 *.njsproj
 *.sln
 create_issues.sh
+issues_list.txt
