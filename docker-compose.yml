@@ -3,11 +3,11 @@ services:
     image: postgres:15
     container_name: bookmarked-postgres
     environment:
-      POSTGRES_USER: bookmarked
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: bookmarked_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -15,12 +15,28 @@ services:
     image: neo4j:5
     container_name: bookmarked-neo4j
     environment:
-      NEO4J_AUTH: neo4j/password
+      NEO4J_AUTH: ${NEO4J_AUTH}
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "${NEO4J_HTTP_HOST_PORT}:7474"  # HTTP
+      - "${NEO4J_BOLT_HOST_PORT}:7687"  # Bolt
     volumes:
       - neo4j_data:/data
+
+  app:
+    build: ./bookmarked-api
+    environment:
+      POSTGRES_URL: ${POSTGRES_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+    depends_on:
+      - postgres
+      - neo4j
+    ports:
+      - "8080:8080"
 
 volumes:
   postgres_data:

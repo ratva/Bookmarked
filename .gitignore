@@ -29,3 +29,4 @@ env/
 *.sln
 create_issues.sh
 issues_list.txt
+task_list.docx
