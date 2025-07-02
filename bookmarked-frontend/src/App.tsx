@@ -27,7 +27,7 @@ function App() {
           newHealth.postgres = 'UP';
         } else if (value.startsWith('PostgreSQL is DOWN:')) {
           newHealth.postgres = 'DOWN';
-          newErrors.postgres = 'Postgres: ' + value.substring('PostgreSQL is DOWN: '.length);
+          newErrors.postgres = ' - ' + value.substring('PostgreSQL is DOWN: '.length);
         }
       } else {
         newErrors.postgres = 'Postgres: ' + (postgresResult.reason?.message || 'Failed');
@@ -39,7 +39,7 @@ function App() {
           newHealth.neo4j = 'UP';
         } else if (value.startsWith('Neo4j is DOWN:')) {
           newHealth.neo4j = 'DOWN';
-          newErrors.neo4j = 'Neo4j: ' + value.substring('Neo4j is DOWN: '.length);
+          newErrors.neo4j = ' - ' + value.substring('Neo4j is DOWN: '.length);
         }
       } else {
         newErrors.neo4j = 'Neo4j: ' + (neo4jResult.reason?.message || 'Failed');
@@ -75,19 +75,20 @@ function App() {
       <div style={{ margin: '2em 0' }}>
         <h2>Backend Health Check</h2>
         {loading && <div>Loading...</div>}
-        {Object.values(errors).length > 0 && (
-          <div style={{ color: 'red' }}>
-            {Object.values(errors)
-              .filter(Boolean)
-              .map((err, idx) => (
-                <div key={idx}>{err}</div>
-              ))}
-          </div>
-        )}
-        {!loading && !errors && (
+        {!loading && (
           <>
-            <div>Postgres: {health.postgres}</div>
-            <div>Neo4j: {health.neo4j}</div>
+            <div>
+              Postgres: {health.postgres || 'Unknown'}
+              {errors.postgres && (
+                <span style={{ color: 'red', marginLeft: '0em' }}>{errors.postgres}</span>
+              )}
+            </div>
+            <div>
+              Neo4j: {health.neo4j || 'Unknown'}
+              {errors.neo4j && (
+                <span style={{ color: 'red', marginLeft: '1em' }}>{errors.neo4j}</span>
+              )}
+            </div>
           </>
         )}
       </div>
